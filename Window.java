@@ -2719,6 +2719,36 @@ public class Window extends javax.swing.JFrame {
         }
     }
 
+    // Helper method to build the correct file path from a tree node by traversing parent nodes
+    private String buildPathFromTreeNode(DefaultMutableTreeNode node) throws IOException {
+        String path = "userfiles/" + FileHandler.currentUser.getUsername(2) + "/";
+        
+        // Build a list of node names from the selected node up to root
+        java.util.ArrayList<String> pathParts = new java.util.ArrayList<>();
+        DefaultMutableTreeNode current = node;
+        
+        while(current.getParent() != null) {
+            DefaultMutableTreeNode parent = (DefaultMutableTreeNode)current.getParent();
+            // Skip the root node
+            if(parent.getParent() != null || !parent.getUserObject().toString().equals(FileHandler.currentUser.getUsername(2))) {
+                String nodeName = (String)current.getUserObject();
+                // Remove .txt extension if it's a file
+                if(nodeName.endsWith(".txt")) {
+                    nodeName = nodeName.substring(0, nodeName.length() - 4);
+                }
+                pathParts.add(0, nodeName);
+            }
+            current = parent;
+        }
+        
+        // Build final path
+        for(String part : pathParts) {
+            path += part + "/";
+        }
+        
+        return path;
+    }
+
     // Textfield on "Add Page..." popup
     private void jTextField13ActionPerformed(java.awt.event.ActionEvent evt) {
         // Placeholder to avoid StackOverflowError
@@ -2734,17 +2764,23 @@ public class Window extends javax.swing.JFrame {
         String pageName = jTextField13.getText();
         boolean isOpen = false;
 
+        // Trim and validate input
+        if (pageName == null) pageName = "";
+        pageName = pageName.trim();
+
+        // Check if input field is empty
+        if(pageName.isEmpty())
+        {
+            // Send error pop-up
+            JOptionPane.showMessageDialog(card3, "You have not provided a name for this new page.\nPlease input a name.",
+            "Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         try{
             isOpen = fileHandler.isOpen(pageName);
 
-            // Check if input field is empty
-            if(pageName == null)
-            {
-                // Send error pop-up
-                JOptionPane.showMessageDialog(card3, "You have not provided a name for this new page.\nPlease input a name.",
-                "Error", JOptionPane.WARNING_MESSAGE);
-            }
-            else if(!(isOpen))
+            if(!(isOpen))
             {
                 // Send error pop-up
                 JOptionPane.showMessageDialog(card2, "Your inputted page name is already in use.\nPlease input another.",
@@ -2754,31 +2790,44 @@ public class Window extends javax.swing.JFrame {
             {
                 addPageDialog.setVisible(false);
                 addingPage.setVisible(false);
+                jTextField13.setText("");
 
-                // Add the page to the account
+                // Determine the parent node and build the correct path
+                DefaultMutableTreeNode parent = (DefaultMutableTreeNode)jTree1.getModel().getRoot();
                 String addToPath = "userfiles/" + FileHandler.currentUser.getUsername(2) + "/";
-                DefaultMutableTreeNode root = (DefaultMutableTreeNode)jTree1.getModel().getRoot();
-
-                // Add the new directory to the root if no directory is selected
+                
+                // If a notebook is selected, add the page to that notebook
                 if(jTree1.getLastSelectedPathComponent() != null) 
                 {
-                    root = (DefaultMutableTreeNode)jTree1.getLastSelectedPathComponent();
-
-                    String addToDir = (String)root.getUserObject();
-                    System.out.println("Adding to this dir: " + addToDir);
-                    addToPath = FileHandler.findFile(addToDir, addToPath);
+                    DefaultMutableTreeNode selected = (DefaultMutableTreeNode)jTree1.getLastSelectedPathComponent();
+                    String selectedName = (String)selected.getUserObject();
+                    
+                    // If selected is a file (.txt), add to its parent (the notebook)
+                    if(selectedName.endsWith(".txt")) {
+                        parent = (DefaultMutableTreeNode)selected.getParent();
+                    } else {
+                        // Selected is a notebook folder
+                        parent = selected;
+                    }
+                    
+                    addToPath = buildPathFromTreeNode(parent);
                 }
 
-                System.out.println("Adding to: " + addToPath);
+                System.out.println("Adding page to: " + addToPath);
 
                 DefaultMutableTreeNode addPage = new DefaultMutableTreeNode(pageName + ".txt");
          
                 DefaultTreeModel treeModel = new DefaultTreeModel((DefaultMutableTreeNode)jTree1.getModel().getRoot());
-                treeModel.insertNodeInto(addPage, root, root.getChildCount());
+                treeModel.insertNodeInto(addPage, parent, parent.getChildCount());
                 this.jTree1.setModel(treeModel);
 
-                File newPage = new File(addToPath + "/" + pageName + ".txt");
+                File newPage = new File(addToPath + pageName + ".txt");
                 newPage.createNewFile();
+                
+                // Set as current file and load into editor
+                FileHandler.currentFile = newPage;
+                fileHandler.loadPage();
+                jLabel13.setText(pageName + ".txt");
                 
                 jTree1.clearSelection();
 
@@ -2795,17 +2844,23 @@ public class Window extends javax.swing.JFrame {
         String notebookName = jTextField14.getText();
         boolean isOpen = false;
 
+        // Trim and validate input
+        if (notebookName == null) notebookName = "";
+        notebookName = notebookName.trim();
+
+        // Check if input field is empty
+        if(notebookName.isEmpty())
+        {
+            // Send error pop-up
+            JOptionPane.showMessageDialog(card3, "You have not provided a name for this new notebook.\nPlease input a name.",
+            "Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         try{
             isOpen = fileHandler.isOpen(notebookName);
 
-            // Check if input field is empty
-            if(notebookName == null)
-            {
-                // Send error pop-up
-                JOptionPane.showMessageDialog(card3, "You have not provided a name for this new notebook.\nPlease input a name.",
-                "Error", JOptionPane.WARNING_MESSAGE);
-            }
-            else if(!(isOpen))
+            if(!(isOpen))
             {
                 // Send error pop-up
                 JOptionPane.showMessageDialog(card2, "Your inputted notebook name is already in use.\nPlease input another.",
@@ -2815,36 +2870,49 @@ public class Window extends javax.swing.JFrame {
             {
                 addNotebookDialog.setVisible(false);
                 addingNotebook.setVisible(false);
+                jTextField14.setText("");
 
-                // Add the notebook to the acocunt
+                // Determine the parent node and build the correct path
+                DefaultMutableTreeNode parent = (DefaultMutableTreeNode)jTree1.getModel().getRoot();
                 String addToPath = "userfiles/" + FileHandler.currentUser.getUsername(2) + "/";
-                DefaultMutableTreeNode root = (DefaultMutableTreeNode)jTree1.getModel().getRoot();
-
-                // Add the new directory to the root if no directory is selected
+                
+                // If a notebook is selected, add the notebook to that notebook
                 if(jTree1.getLastSelectedPathComponent() != null) 
                 {
-                    root = (DefaultMutableTreeNode)jTree1.getLastSelectedPathComponent();
-
-                    String addToDir = (String)root.getUserObject();
-                    System.out.println("Adding to this dir: " + addToDir);
-                    addToPath = FileHandler.findFile(addToDir, addToPath);
+                    DefaultMutableTreeNode selected = (DefaultMutableTreeNode)jTree1.getLastSelectedPathComponent();
+                    String selectedName = (String)selected.getUserObject();
+                    
+                    // If selected is a file (.txt), add to its parent (the notebook)
+                    if(selectedName.endsWith(".txt")) {
+                        parent = (DefaultMutableTreeNode)selected.getParent();
+                    } else if(!selected.isRoot()) {
+                        // Selected is a notebook folder
+                        parent = selected;
+                    }
+                    
+                    addToPath = buildPathFromTreeNode(parent);
                 }
 
-                System.out.println("Adding to: " + addToPath);
+                System.out.println("Adding notebook to: " + addToPath);
 
                 DefaultMutableTreeNode addNotebook = new DefaultMutableTreeNode(notebookName);
                 DefaultMutableTreeNode addPlaceHolder = new DefaultMutableTreeNode("Placeholder.txt");
          
                 DefaultTreeModel treeModel = new DefaultTreeModel((DefaultMutableTreeNode)jTree1.getModel().getRoot());
-                treeModel.insertNodeInto(addNotebook, root, root.getChildCount());
+                treeModel.insertNodeInto(addNotebook, parent, parent.getChildCount());
                 treeModel.insertNodeInto(addPlaceHolder, addNotebook, addNotebook.getChildCount());
                 this.jTree1.setModel(treeModel);
 
-                File newNotebook = new File(addToPath + "/" + notebookName);
+                File newNotebook = new File(addToPath + notebookName);
                 newNotebook.mkdir();
 
-                File placeHolder = new File(addToPath + "/" + notebookName + "/PlaceHolder.txt");
+                File placeHolder = new File(addToPath + notebookName + "/Placeholder.txt");
                 placeHolder.createNewFile();
+                
+                // Set placeholder as current file and load into editor
+                FileHandler.currentFile = placeHolder;
+                fileHandler.loadPage();
+                jLabel13.setText("Placeholder.txt");
                 
                 jTree1.clearSelection();
         

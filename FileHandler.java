@@ -184,7 +184,7 @@ public class FileHandler {
 
             return fileRoot;
         } else {
-            if (prevFileRoot != "" && !(dirExistsIn(fileRoot))) {
+            if (prevFileRoot != null && !prevFileRoot.equals("") && !(dirExistsIn(fileRoot))) {
                 dirsToSkip.add(new File(fileRoot));
                 return findFile(fileName, prevFileRoot);
             } else {
@@ -212,20 +212,20 @@ public class FileHandler {
 
     // An exists() method for a directory in a specified path
     public static boolean dirExistsIn(String path) {
-        boolean dirExists = false;
+        if (path == null || path.equals("")) return false;
 
         File files = new File(path);
         File[] dirFiles = files.listFiles();
 
-        for (File file : dirFiles) 
-        {
-            if (file.isDirectory()) 
-            {
-                dirExists = true;
+        if (dirFiles == null) return false;
+
+        for (File file : dirFiles) {
+            if (file.isDirectory()) {
+                return true;
             }
         }
 
-        return dirExists;
+        return false;
     }
 
     public void updateMode(String newMode) throws IOException
