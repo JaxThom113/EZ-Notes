@@ -1,0 +1,11 @@
+build/
+
+# Ignore everything in userdata/
+userdata/*
+# But keep Placeholder.txt
+!userdata/Placeholder.txt 
+
+# Ignore everything in userdata/
+userfiles/*
+# But keep Placeholder.txt
+!userfiles/Placeholder.txt 
