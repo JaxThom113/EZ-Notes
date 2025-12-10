@@ -2,9 +2,9 @@
 
 <img alt="EZ Notes Logo" width="500" src="./images/logo.png">
 
-TSA 2020-2021 Software Development project
+2020-2021 TSA Software Development project
 
-### Setup
+## Setup
 
 Input these commands into the command prompt to get an executable jar file (.jar) to run the main class in Window.java:
 
@@ -22,7 +22,7 @@ java -jar build/window.jar
 
 If any errors result from these commands, compile and run Window.java in a separate IDE.
 
-### Topics
+## Topics
 
 ###### 1. Login System
 
@@ -56,7 +56,7 @@ Our app offers a few modes for different note-taking expereiences:
 - Zen: Standard mode with a cyclical playlist of tracks created to soothe the mind and influence productivity. 
 - Focus: Standard mode with the exception of the ability to earn credits to spend in the shop
 
-### References
+## References
 
 Java Swing:
 
